@@ -2,8 +2,9 @@
 
 > Краткая справка по Intellectual Work Environment (IWE) для поиска и ответов бота.
 > Полная установка: [SETUP-GUIDE.md](SETUP-GUIDE.md)
+> Не на macOS или не Claude Code? → **[PORTABILITY.md](PORTABILITY.md)**
 >
-> **Source-of-truth:** Pack-сущности платформы (доступны через MCP `knowledge-mcp`):
+> **Source-of-truth:** Pack-сущности платформы (доступны через Gateway `iwe-knowledge`):
 > - `DP.IWE.001` — что такое IWE, зачем, архитектура
 > - `DP.IWE.002` — шаблон и установка, пререквизиты, FAQ, безопасность
 > - `DP.EXOCORTEX.001` — архитектура экзокортекса (3 слоя, модули)
@@ -24,14 +25,14 @@ IWE (Intellectual Work Environment) — интеллектуальная раб�
 | **Методы** | Процедуры «как делать» | Протокол ОРЗ, Capture-to-Pack, ArchGate, KE, Note-Review |
 | **Рабочие продукты** | Что производится | DS-strategy, Pack-документы, DS-проекты, события ЦД |
 
-Полная архитектурная модель: [LEARNING-PATH.md § 1.2](LEARNING-PATH.md). Source-of-truth: `DP.IWE.001` (через MCP: `knowledge-mcp search("IWE архитектура")`).
+Полная архитектурная модель: [LEARNING-PATH.md § 1.2](LEARNING-PATH.md). Source-of-truth: `DP.IWE.001` (через Gateway: `knowledge_search("IWE архитектура")`).
 
 ---
 
 ## Что нужно для установки
 
 ### Обязательно
-- macOS, Linux или Windows (через WSL)
+- macOS, Linux или Windows (через Git Bash — WSL не обязателен, не проверено вживую на реальном Windows, см. [SETUP-GUIDE.md § Windows](SETUP-GUIDE.md#00-windows-без-wsl))
 - Git + GitHub аккаунт + GitHub CLI (`gh`)
 - Node.js v18+ и npm
 - Claude Code CLI (`npm install -g @anthropic-ai/claude-code`)
@@ -60,23 +61,22 @@ IWE (Intellectual Work Environment) — интеллектуальная раб�
 
 ## Доступ к знаниям (MCP)
 
-MCP (Model Context Protocol) — протокол, через который Claude Code подключается к базе знаний платформы. Два сервера:
+MCP (Model Context Protocol) — протокол, через который Claude Code подключается к базе знаний платформы. Один Gateway-сервер агрегирует все бэкенды:
 
 | Сервер | Что даёт | Инструменты |
 |--------|---------|-------------|
-| **knowledge-mcp** | Поиск по Pack-репо, руководствам, DS (~5400 документов) | `search`, `get_document`, `list_sources` |
-| **ddt** | Цифровой двойник ученика (цели, самооценка) | `describe_by_path`, `read_digital_twin`, `write_digital_twin` |
+| **iwe-knowledge** (Gateway: `mcp.aisystant.com/mcp`) | Поиск по Pack-репо, руководствам, DS (~5400 документов) + цифровой двойник | `knowledge_search`, `knowledge_get_document`, `knowledge_list_sources`, `dt_read_digital_twin`, `dt_write_digital_twin`, `dt_describe_by_path` |
 
-> Поиск по руководствам: `knowledge-mcp search("запрос", source_type="guides")`.
+> Поиск по руководствам: `knowledge_search("запрос", source_type="guides")`.
 
-MCP подключается через https://claude.ai/settings/connectors (см. SETUP-GUIDE §1.3b). Проверка: `/mcp` в Claude Code → серверы Connected. Попроси «Найди документы про принципы» — Claude использует `knowledge-mcp search`.
+MCP подключается через https://claude.ai/settings/connectors (см. SETUP-GUIDE §1.3b). Проверка: `/mcp` в Claude Code → серверы Connected. Попроси «Найди документы про принципы» — Claude использует `knowledge_search`.
 
 ---
 
 ## Три роли в IWE
 
 > В шаблоне экзокортекса **3 роли**, доступные сразу: Стратег, Экстрактор, Синхронизатор. Платформа поддерживает 21 роль — они подключаются по мере развития системы.
-> Полный реестр ролей: `DP.ROLE.001` (через MCP: `knowledge-mcp search("реестр ролей агентов")`).
+> Полный реестр ролей: `DP.ROLE.001` (через Gateway: `knowledge_search("реестр ролей агентов")`).
 
 ### Стратег (R1)
 Планирование и рефлексия. Каждое утро (Вт-Вс) формирует план дня из коммитов вчера. Понедельник — подготовка к недельной сессии. Вечером (23:00) — разбор заметок из Telegram.
@@ -153,7 +153,7 @@ bash update.sh --check  # проверить без применения
 
 **Claude Code не запускается** — проверь подписку Anthropic и `claude --version`. Начинать можно с Pro plan ($20/мес). При необходимости — Max (~$100/мес).
 
-**Стратег не формирует план** — проверь `launchctl list | grep strategist` (macOS). Если нет — `bash roles/strategist/install.sh`.
+**Стратег не формирует план** — macOS: `launchctl list | grep strategist`. Linux: `systemctl --user list-timers | grep strategist`. Если нет — `bash roles/strategist/install.sh`.
 
 **MEMORY.md не загружается** — проверь путь: `~/.claude/projects/-Users-<username>-IWE/memory/MEMORY.md`. Имя директории = путь к workspace через дефисы.
 
@@ -187,8 +187,28 @@ export TELEGRAM_CHAT_ID="your-id"
 | Routing | Таблица маршрутизации знаний (куда класть captures) |
 | Marp | Инструмент для создания слайдов из Markdown. Workflow: `.md` → предпросмотр (VS Code) → PDF/HTML (`marp --pdf`). Используется для слайдоментов |
 | MCP | Model Context Protocol — доступ Claude Code к внешним базам знаний |
-| knowledge-mcp | MCP-сервер: поиск по Pack, руководствам, DS |
-| ddt | MCP-сервер: цифровой двойник ученика |
+| iwe-knowledge | Gateway MCP-сервер (`mcp.aisystant.com/mcp`): поиск по Pack, руководствам, DS + цифровой двойник |
+
+---
+
+---
+
+## Создание Pack (базы знаний домена)
+
+Pack — репозиторий с формализованными знаниями предметной области. Это source-of-truth: всё, что Claude должен знать о домене — здесь.
+
+**Когда нужен Pack:**
+- Регулярно работаешь в одной области
+- Хочешь, чтобы Claude знал термины и паттерны твоей области
+- Устал повторять контекст в каждой сессии
+
+**Как создать:** написать `/pack-new` в Claude Code.
+
+Скилл проведёт: выбор домена → имя Pack → структура → дорожная карта наполнения.
+
+**После создания Pack** наполняй через `/ke` (Knowledge Extraction) — фиксируй знания по ходу работы.
+
+Подробно: [PACK-CREATION.md](PACK-CREATION.md)
 
 ---
 
@@ -197,9 +217,10 @@ export TELEGRAM_CHAT_ID="your-id"
 **В этом репо:**
 - [SETUP-GUIDE.md](SETUP-GUIDE.md) — пошаговая установка (от нуля до работающего IWE)
 - [LEARNING-PATH.md](LEARNING-PATH.md) — полный путь изучения: принципы, протоколы, агенты, Pack, SOTA
+- [PACK-CREATION.md](PACK-CREATION.md) — создание Pack: домен, имя, структура, наполнение
 - [principles-vs-skills.md](principles-vs-skills.md) — почему навыков недостаточно: принципы и генеративная иерархия
 
-**В Pack (через MCP `knowledge-mcp search`):**
+**В Pack (через Gateway `knowledge_search`):**
 - `DP.IWE.001` — что такое IWE, зачем, 5 архитектурных видов, сравнения (vs экзокортекс, vs агенты, vs second brain)
 - `DP.IWE.002` — шаблон и установка: пререквизиты, стоимость, роли, ОРЗ, FAQ, безопасность
 - `DP.EXOCORTEX.001` — модульный экзокортекс: 3 слоя, template-sync, standard/personal

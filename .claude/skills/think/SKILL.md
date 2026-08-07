@@ -1,10 +1,15 @@
 ---
 name: think
-description: ADI-цикл структурированного рассуждения (Abduction-Deduction-Induction-Audit-Decide). Используй для сложных решений, когда нужно рассмотреть несколько гипотез.
+description: ADI-cycle structured reasoning (Abduction-Deduction-Induction-Audit-Decide). Use for complex decisions when multiple hypotheses need to be considered.
 argument-hint: "[задача или вопрос]"
+routing:
+  executor: opus
+  deterministic: false
 ---
 
 # ADI-цикл рассуждения
+
+> FPF B.5 (ADI). Доверие к данным: F-G-R (B.3) — факт/предположение/слух. Сравнение вариантов: A.19 — одинаковые критерии для всех.
 
 Задача: $ARGUMENTS
 

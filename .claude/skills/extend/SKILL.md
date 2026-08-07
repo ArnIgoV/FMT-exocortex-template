@@ -1,9 +1,13 @@
 ---
 name: extend
-description: "Каталог расширяемости IWE: что можно настроить, какие extension points существуют, какие параметры доступны, как установить чужое расширение."
+description: "IWE extensibility catalog: what can be customized, which extension points exist, which parameters are available, how to install a third-party extension."
 argument-hint: "[название протокола или пустое для полного каталога]"
 user_invocable: true
 version: 1.0.0
+routing:
+  executor: script
+  deterministic: true
+  script_path: ".claude/skills/extend/show-catalog.sh"
 ---
 
 # /extend — Каталог расширяемости IWE
@@ -35,7 +39,7 @@ cat {{WORKSPACE_DIR}}/params.yaml 2>/dev/null
 
 | Протокол | Hook | Файл для создания | Когда выполняется |
 |----------|------|-------------------|-------------------|
-| `protocol-close` | `checks` | `extensions/protocol-close.checks.md` | После commit+push, перед статусами |
+| `protocol-close` | `checks` | `extensions/protocol-close.checks.md` | **ДО** commit+push — pre-commit gate (R4.3, WP-273) |
 | `protocol-close` | `after` | `extensions/protocol-close.after.md` | После чеклиста, перед верификацией |
 | `day-open` | `before` | `extensions/day-open.before.md` | Перед шагом 1 — утренние ритуалы |
 | `day-open` | `after` | `extensions/day-open.after.md` | После «Требует внимания», перед DayPlan |

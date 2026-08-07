@@ -28,7 +28,7 @@
 | Экстракция знаний | Knowledge Extraction | DP.M.001 | Метод Capture-to-Pack в протоколе работы |
 | Адаптивная персонализация | Adaptive Personalization | DP.M.004 | MCP ddt — цифровой двойник ученика |
 | Цифровой двойник | Digital Twin | DP.CONCEPT.001 | MCP ddt — метамодель, цели, самооценка |
-| Навигация знаний | Knowledge Navigation | DP.NAV.001 | MCP knowledge-mcp — hybrid search по Pack и guides |
+| Навигация знаний | Knowledge Navigation | DP.NAV.001 | Gateway iwe-knowledge (mcp.aisystant.com/mcp) — hybrid search по Pack и guides |
 | IPO-паттерн | IPO Pattern | DP.ARCH.001 | Контракт описания компонентов в CLAUDE.md |
 | Архитектурная характеристика | Architectural Characteristic | DP.D.010 | АрхГейт (ЭМОГССБ) в CLAUDE.md §5 |
 | Файл контекста РП | WP Context File | DP.EXOCORTEX.001 | inbox/WP-*.md в DS-strategy |
@@ -53,7 +53,7 @@
 | Стратегический хаб | Strategy Hub | DS-strategy — governance-репо для планов, ревью, сессий | DP.ROLE.012 |
 | Placeholder-переменная | Placeholder Variable | `{{VAR}}` — подставляется setup.sh при развёртывании шаблона | — (реализационное) |
 | Контракт роли | Role Contract | role.yaml + промпты + скрипты в roles/<name>/ | DP.ROLE.001 |
-| Hub-and-Spoke | Hub-and-Spoke | Паттерн координации: DS-strategy (хаб) ↔ WORKPLAN.md в каждом репо (споки) | DP.ROLE.012 |
+| Реестр РП | WP Registry | Single-source агрегатор активных РП: `WP-REGISTRY.md` + `inbox/WP-*.md` в governance-репо, sweep через `scripts/active-wp-sweep.sh` (отменён hub-and-spoke с WORKPLAN.md, WP-283 Ф-H, май 2026) | DP.ROLE.012 |
 | Творческий конвейер | Creative Pipeline | 4 стадии превращения мысли в публикацию: заметка → черновик → заготовка → пост. Каждый артефакт обязан продвинуться или быть закрыт в пределах TTL | DP.M.003 |
 | Guard (страж) | Guard | Автоматическая проверка TTL-нарушений на стратегировании и Day Close | DP.EXOCORTEX.001 |
 | DayPlan | DayPlan | Дневной план — артефакт Day Open. Handoff Стратег→Человек | DP.M.003 |
@@ -76,7 +76,7 @@
 | WP | Рабочий продукт | Work Product | SPF |
 | IPO | Вход-Обработка-Выход | Input-Processing-Output | SPF |
 | DP | Цифровая платформа | Digital Platform | Pack |
-| IWE | Среда интеллектуальной работы | Intellect Work Environment | Pack |
+| IWE | Среда интеллектуальной работы | Intellectual Work Environment | Pack |
 | MCP | Протокол контекста модели | Model Context Protocol | Pack |
 | ОРЗ | Открытие-Работа-Закрытие | Open-Work-Close | Pack |
 | РП | Рабочий продукт (экземпляр) | Work Product (instance) | Pack |

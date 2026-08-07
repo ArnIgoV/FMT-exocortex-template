@@ -1,9 +1,12 @@
 ---
 name: iwe-update
-description: "Обновление IWE с объяснением изменений. Агент вызывает update.sh, парсит CHANGELOG, объясняет что изменилось, помогает адаптировать обновления к кастомизациям пользователя."
+description: "Update IWE with change explanations. Agent calls update.sh, parses CHANGELOG, explains what changed, helps adapt updates to user customizations."
 argument-hint: ""
 user_invocable: true
 version: 1.0.0
+routing:
+  executor: haiku
+  deterministic: false
 ---
 
 # IWE Update (агент-обновитель)
@@ -18,7 +21,7 @@ version: 1.0.0
 Запустить update.sh в режиме превью:
 
 ```bash
-cd {{WORKSPACE_DIR}}/FMT-exocortex-template && bash update.sh --check 2>&1
+cd "$IWE_TEMPLATE" && bash update.sh --check 2>&1
 ```
 
 Из вывода извлечь:
@@ -31,7 +34,13 @@ cd {{WORKSPACE_DIR}}/FMT-exocortex-template && bash update.sh --check 2>&1
 
 ### 2. CHANGELOG — что изменилось
 
-Прочитать `FMT-exocortex-template/CHANGELOG.md`. Найти записи между текущей и новой версией.
+`CHANGELOG.md` больше не доставляется локально (WP-401 Ф6.1) — читать по raw-URL:
+
+```bash
+curl -fsSL "https://raw.githubusercontent.com/TserenTserenov/FMT-exocortex-template/main/CHANGELOG.md"
+```
+
+Найти записи между текущей и новой версией.
 
 **Объяснить пользователю на человеческом языке:**
 - Что добавлено и зачем (не список файлов, а **польза**)
@@ -77,7 +86,7 @@ ls extensions/*.md 2>/dev/null
 Если пользователь одобрил (или `--yes`):
 
 ```bash
-cd {{WORKSPACE_DIR}}/FMT-exocortex-template && bash update.sh --yes 2>&1
+cd "$IWE_TEMPLATE" && bash update.sh --yes 2>&1
 ```
 
 Из вывода извлечь результат:

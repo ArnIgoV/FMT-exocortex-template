@@ -1,7 +1,10 @@
 ---
 name: run-protocol
-description: Пошаговое выполнение протокола ОРЗ с обязательной отметкой каждого шага. Предотвращает пропуск шагов (включая верификацию).
+description: Step-by-step execution of the OWC protocol with mandatory checkpoint at each step. Prevents skipping steps (including verification).
 argument-hint: "[open|close] [day|session]"
+routing:
+  executor: sonnet
+  deterministic: false
 ---
 
 # Выполнение протокола
@@ -13,18 +16,38 @@ argument-hint: "[open|close] [day|session]"
 
 ## Шаг 1. Определить протокол
 
-| Аргумент | Файл |
-|----------|------|
-| `open day` | `memory/protocol-open.md § День` |
-| `open session` или задание | `memory/protocol-open.md § Сессия` |
-| `close day` | `memory/protocol-close.md § День` |
-| `close session` | `memory/protocol-close.md § Сессия` |
+| Аргумент | Маршрутизация (краткая) | Полный алгоритм |
+|----------|------------------------|-----------------|
+| `day-open` / `open day` | `memory/protocol-open.md` (§ Масштаб: День) | `.claude/skills/day-open/SKILL.md` |
+| `open session` или задание | `memory/protocol-open.md` (§ Масштаб: Сессия) | — (inline в protocol-open.md) |
+| `day-close` / `close day` | `memory/protocol-close.md` (§ Маршрутизация) | `.claude/skills/day-close/SKILL.md` |
+| `close session` | `memory/protocol-close.md` (§ Quick Close) | — (inline в protocol-close.md) |
+| `week-close` | `memory/protocol-close.md` (§ Маршрутизация) | `.claude/skills/week-close/SKILL.md` |
 
-Прочитай соответствующий файл и секцию.
+> Если у аргумента есть Skill-файл → читай его (содержит полный алгоритм + чеклист). Protocol-файл = слим-маршрутизатор + Quick Close inline.
+
+## Шаг 1b. Загрузить extensions (БЛОКИРУЮЩЕЕ)
+
+Определи имя протокола: `day-open`, `day-close`, `week-close`, `protocol-close`, `protocol-open`.
+
+Проверь и прочитай (если существуют):
+1. `extensions/{protocol}.before.md` → добавить как **первые** шаги в TodoWrite
+2. `extensions/{protocol}.after.md` → добавить как шаги **после** основного алгоритма, **перед** верификацией
+3. `extensions/{protocol}.checks.md` → добавить как шаг **перед git commit** (БЛОКИРУЮЩЕЕ: commit запрещён до прохождения checks)
+
+Не существует → пропустить молча. Существует → прочитать и включить в план.
 
 ## Шаг 2. Извлечь шаги
 
-Из алгоритма протокола извлеки пронумерованный список шагов. Запиши их как задачи (TodoWrite):
+Из алгоритма протокола (Skill-файл или protocol-файл) и extensions извлеки пронумерованный список шагов. Запиши их как задачи (TodoWrite):
+
+Порядок задач:
+1. Extensions `.before.md` (если есть)
+2. Основные шаги из алгоритма
+3. Extensions `.after.md` (если есть)
+4. Extensions `.checks.md` + git commit (если есть артефакт для коммита)
+5. Верификация по чеклисту (`/verify`)
+
 - Каждый основной шаг = отдельная задача
 - Последняя задача ВСЕГДА = «Верификация по чеклисту (/verify)»
 - Статус: pending

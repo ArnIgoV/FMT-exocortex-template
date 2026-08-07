@@ -1,20 +1,19 @@
 Выполни сценарий «Подготовка к сессии стратегирования» для роли Стратег (R1).
 
-Источник сценария: {{WORKSPACE_DIR}}/PACK-digital-platform/pack/digital-platform/02-domain-entities/DP.ROLE.012-strategist/scenarios/scheduled/01-strategy-session.md
 
 ## Контекст
 
-- **HUB (личные планы):** {{WORKSPACE_DIR}}/DS-strategy/current/
-- **Документы стратегии:** {{WORKSPACE_DIR}}/DS-strategy/docs/ (ВСЕ файлы: Strategy.md, Dissatisfactions.md, Session Agenda.md)
-- **Inbox:** {{WORKSPACE_DIR}}/DS-strategy/inbox/ ([fleeting-notes.md](https://github.com/{{GITHUB_USER}}/DS-strategy/blob/main/inbox/fleeting-notes.md) + свежие файлы за неделю)
-- **SPOKE (планы репо):** {{WORKSPACE_DIR}}/*/WORKPLAN.md
+- **HUB (личные планы):** {{WORKSPACE_DIR}}/{{GOVERNANCE_REPO}}/current/
+- **Документы стратегии:** {{WORKSPACE_DIR}}/{{GOVERNANCE_REPO}}/docs/ (ВСЕ файлы: Strategy.md, Dissatisfactions.md, Session Agenda.md)
+- **Inbox:** {{WORKSPACE_DIR}}/{{GOVERNANCE_REPO}}/inbox/ ([fleeting-notes.md](https://github.com/{{GITHUB_USER}}/{{GOVERNANCE_REPO}}/blob/main/inbox/fleeting-notes.md) + свежие файлы за неделю)
+- **Активные РП:** `bash {{WORKSPACE_DIR}}/scripts/active-wp-sweep.sh` (агрегатор по `{{GOVERNANCE_REPO}}/inbox/WP-*.md` + git-активность 7д — ~15с, не ручной обход)
 - **Стратегические карты:** {{WORKSPACE_DIR}}/*/MAPSTRATEGIC.md (если есть в репо)
 - **MEMORY:** ~/.claude/projects/{{CLAUDE_PROJECT_SLUG}}/memory/MEMORY.md
 
 ## Именование файлов в current/
 
 ```
-DS-strategy/
+{{GOVERNANCE_REPO}}/
 ├── current/
 │   ├── WeekPlan W{N} YYYY-MM-DD.md    # план недели (Пн дата)
 │   └── DayPlan YYYY-MM-DD.md          # план дня
@@ -23,7 +22,7 @@ DS-strategy/
 ├── inbox/                              # fleeting-notes.md + входящие
 ```
 
-В `current/` — только актуальные файлы. Старые перемещаются в `DS-strategy/archive/`.
+В `current/` — только актуальные файлы. Старые перемещаются в `{{GOVERNANCE_REPO}}/archive/`.
 
 ## Предусловие
 
@@ -37,15 +36,15 @@ DS-strategy/
 
 #### 1. Прочитать итоги прошлой недели (→ блок «Ревью прошлой недели»)
 
-- Найди секцию «Итоги W{N-1}» в текущем `WeekPlan W*.md` в `DS-strategy/current/`
+- Найди секцию «Итоги W{N-1}» в текущем `WeekPlan W*.md` в `{{GOVERNANCE_REPO}}/current/`
 - Извлеки: completion rate, carry-over, инсайты
 
 > Если секция итогов не найдена — сообщить об ошибке и собрать коммиты самостоятельно (fallback).
 
 #### 2. Обработать inbox (→ блок «Разбор inbox и исчезающих заметок»)
 
-- Прочитай `DS-strategy/inbox/fleeting-notes.md`
-- Прочитай ВСЕ файлы из `DS-strategy/inbox/` (кроме .DS_Store и .docx)
+- Прочитай `{{GOVERNANCE_REPO}}/inbox/fleeting-notes.md`
+- Прочитай ВСЕ файлы из `{{GOVERNANCE_REPO}}/inbox/` (кроме .DS_Store и .docx)
 - Прочитай QA-отчёт бота: `DS-agent-workspace/scheduler/feedback-triage/` (последний по дате) — **структурированный отчёт** из feedback_triage DB: замечания (✏️) первые, urgent (high/critical) вторые, кластеры проблем третьи. Auto-triage уже выполнен ботом → Session-Prep проверяет кластеры (≥3 = **urgent** → WP-debt) и помечает resolved
 - Для каждой заметки/файла определи: → в план недели? → capture в Pack? → в повестку для обсуждения? → удалить?
 - **Недельная агрегация Inbox Triage:**
@@ -66,29 +65,37 @@ DS-strategy/
 
 #### 3. Проверить неудовлетворённости (→ блок «НЭП»)
 
-- Прочитай `DS-strategy/docs/Dissatisfactions.md`
+- Прочитай `{{GOVERNANCE_REPO}}/docs/Dissatisfactions.md`
 - Проверь: какие операционные НЭП разрешены (можно закрыть)?
 - Проверь: есть ли стратегические НЭП без привязки к РП на этой неделе?
 - Сформируй блок повестки с предложениями
 
 #### 4. Сверка со стратегией + агрегация MAPSTRATEGIC (→ блок «Стратегическая сверка»)
 
-- Прочитай `DS-strategy/docs/Strategy.md` — фокусы года, Q1 цели, приоритеты месяца
+- Прочитай `{{GOVERNANCE_REPO}}/docs/Strategy.md` — фокусы года, Q1 цели, приоритеты месяца
 - Прочитай `{{WORKSPACE_DIR}}/*/MAPSTRATEGIC.md` (если файл есть в репо)
 - **Агрегируй** фазы из MAPSTRATEGIC.md → обнови секцию «Текущие фазы (MAPSTRATEGIC)» в Strategy.md
 - Обнови «Приоритеты месяца» — статусы на основе итогов в WeekPlan
 - Проверь: соответствуют ли текущие РП стратегическому направлению?
 - Отметь расхождения (РП без привязки к стратегии, или стратегия без РП)
 
-#### 5. Обход WORKPLAN.md (Hub-and-Spoke)
+#### 5. Агрегация активных РП
 
-- Прочитай `{{WORKSPACE_DIR}}/*/WORKPLAN.md` из каждого репо
-- Собери все РП со статусом pending/in-progress
-- Выяви расхождения с HUB-планом
+> Источник: `bash {{WORKSPACE_DIR}}/scripts/active-wp-sweep.sh`
+>
+> Скрипт обходит все `inbox/WP-*.md`, кросс-проверяет git-активность за 7 дней,
+> выдаёт markdown-таблицу активных РП со статусами и бюджетами за секунды —
+> не читай `WORKPLAN.md` вручную по каждому репо (эти файлы почти нигде не
+> существуют, а сам `{{GOVERNANCE_REPO}}`/CLAUDE.md называет их отменённым
+> антипаттерном; ручной обход растягивал session-prep на 30+ минут вместо
+> секунд, WP-484 20.07).
+
+- Запусти `active-wp-sweep.sh` и используй результат как вход для формирования плана
+- Расхождения с HUB-планом отметь для обсуждения на сессии
 
 #### 6. Проверить нерегулярные блоки (Session Agenda)
 
-- Прочитай `DS-strategy/docs/Session Agenda.md`
+- Прочитай `{{GOVERNANCE_REPO}}/docs/Session Agenda.md`
 - Определи: какие нерегулярные блоки применимы на этой неделе? (ретро, архитектура, разбор документа и др.)
 - Если есть — добавь в повестку
 
@@ -100,9 +107,9 @@ DS-strategy/
 
 #### 7. Сформировать черновик WeekPlan
 
-- Выбери РП из месячных приоритетов + WORKPLAN.md + carry-over + inbox
+- Выбери РП из месячных приоритетов + active-wp-sweep + carry-over + inbox
 - **Нет Л-задач.** Всё = РП. Личные задачи (налоги, счета, документы) тоже получают номер РП и WP context file. Без номера задача теряется при carry-over.
-- **Актуализация статусов:** Для каждого РП в таблице проверь `inbox/WP-{N}-*.md` (WP context file). Если есть — бери статус и описание оттуда (source-of-truth прогресса), а не из WORKPLAN.md или предыдущего WeekPlan. WP context file > WORKPLAN.md > carry-over.
+- **Актуализация статусов:** Для каждого РП в таблице проверь `inbox/WP-{N}-*.md` (WP context file). Если есть — бери статус и описание оттуда (source-of-truth прогресса). WP context file > carry-over.
 - Сформируй таблицу с бюджетом
 - Сформируй повестку сессии стратегирования (все блоки из шагов 1-6)
 - Сформулируй вопросы для обсуждения с пользователем
@@ -118,12 +125,15 @@ DS-strategy/
    - `status: done` / `merged` / `drop` всё ещё в inbox? → переместить в `archive/wp-contexts/` (Close пропустил)
    - Если фронтматтер WP-файла не совпадает с MEMORY.md → обновить фронтматтер перед перемещением
 6. **Полная очистка inbox/ (еженедельно, единственный владелец — Session-Prep):**
-   - `extraction-reports/` — отчёты старше 7 дней → удали (информация уже в Pack)
+   - `extraction-reports/` — учитывай `status` во frontmatter (инвариант «capture не исчезает без решения»):
+     - `status ∈ {applied, rejected, no-pending}` и старше 7 дней → удали (решение принято, информация в Pack/feedback-log)
+     - `status ∈ {pending-review, partially-applied, deferred}` → **не трогай** (ждут разбора через `/apply-captures`)
+     - Без frontmatter или без поля `status` → оставить (считать pending-review)
    - `captures.md` — записи с `[processed ...]` старше 14 дней → **архивируй** в `archive/captures/captures-{period}.md` (НЕ удалять — это аудитный след записи в Pack). Записи с `[rejected ...]` старше 14 дней → архивируй туда же.
    - Записи **без** метки `[processed]` или `[rejected]` → оставить (ещё не обработаны Экстрактором)
    - Прочие файлы (не fleeting-notes.md, не captures.md, не активные WP-*) → «Ещё нужен?» Нет → удали или `archive/notes/`
 7. Создай `current/WeekPlan W{N} YYYY-MM-DD.md` (Пн текущей недели)
-8. Закоммить в DS-strategy
+8. Закоммить в {{GOVERNANCE_REPO}}
 
 **Формат WeekPlan:**
 
@@ -225,12 +235,11 @@ agent: Стратег
 
 ## Post-session sync (выполняется Стратегом после утверждения WeekPlan)
 
-> **Правило:** По итогам стратегирования обновлять Strategy.md и все затронутые WORKPLAN.md. Это гарантирует, что данные не устаревают между сессиями.
+> **Правило:** По итогам стратегирования обновить Strategy.md и статусы затронутых WP context files. Это гарантирует, что данные не устаревают между сессиями.
 
 1. **Strategy.md** — обновить «Приоритеты месяца» (статусы, бюджеты, новые приоритеты)
-2. **WORKPLAN.md** — для каждого репо, упомянутого в WeekPlan:
-   - Обновить статусы РП (done/in_progress/pending)
-   - Добавить новые РП
-   - Убрать done/archived
+2. **inbox/WP-NNN.md** — для каждого РП, упомянутого в WeekPlan:
+   - Обновить `status:` (done/in_progress/pending)
+   - Добавить новые РП (если появились в ходе сессии)
 3. **MEMORY.md** — синхронизировать таблицу «РП текущей недели»
 4. Закоммитить все изменения
