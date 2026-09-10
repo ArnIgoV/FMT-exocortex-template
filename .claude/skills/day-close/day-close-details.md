@@ -42,11 +42,19 @@
 
 **Проверка (в начале алгоритма, до шага 1).** `date +%A` — локале-зависимо (под `ru_RU.UTF-8` вернёт «четверг», не «thursday», и сравнение с англоязычным именем из конфига никогда не совпадёт — тот же баг однажды уже был найден и исправлен в `day-open-scaffold.sh`, здесь используется тот же паттерн: числовой день недели `date +%u` (1=Пн…7=Вс, локале-независимо) + карта имя→число):
 ```bash
-STRATEGY_DAY_NAME=$(python3 -c "
+T="${IWE_TEMPLATE:-$HOME/IWE/FMT-exocortex-template}"
+# issue #541 hvost 3 (Evgenii, cold-review 26.08): бывший голый `python3 -c` со
+# сглатыванием stderr тихо возвращал "monday", даже если реальный
+# day-rhythm-config.yaml называет другой день — на хосте без PyYAML это была
+# не ошибка, а неотличимая от штатной работы неверная логика. find-python3.sh
+# сам печатает внятную причину в stderr при неудаче (не глушим её здесь);
+# страховка на monday остаётся — это мягкий guard, не повод падать целиком.
+PY3="$(bash "$T/.claude/lib/find-python3.sh")"
+STRATEGY_DAY_NAME=$([ -n "$PY3" ] && "$PY3" -c "
 import yaml
 d = yaml.safe_load(open('${IWE_GOVERNANCE_REPO:-DS-strategy}/exocortex/day-rhythm-config.yaml'))
 print((d.get('day_open') or {}).get('strategy_day', 'monday'))
-" 2>/dev/null || echo monday)
+" || echo monday)
 case "$STRATEGY_DAY_NAME" in
   monday)    STRATEGY_DOW=1 ;;
   tuesday)   STRATEGY_DOW=2 ;;
@@ -71,9 +79,9 @@ fi
 ## Шаг 1: Сбор данных
 
 ```bash
-for repo in $(ls {{HOME_DIR}}/IWE/); do
-  if [ -d {{HOME_DIR}}/IWE/$repo/.git ]; then
-    commits=$(git -C {{HOME_DIR}}/IWE/$repo log --since="today 00:00" --oneline --no-merges 2>/dev/null \
+for repo in $(ls $HOME/IWE/); do
+  if [ -d $HOME/IWE/$repo/.git ]; then
+    commits=$(git -C $HOME/IWE/$repo log --since="today 00:00" --oneline --no-merges 2>/dev/null \
       | grep -vE "^(docs|chore|ci|style|perf|test)(\\(|:| )" \
       | grep -vE "memory/|\.claude/rules/|template-sync|backup|reindex" \
       || true)
@@ -100,7 +108,7 @@ done
 
 ```bash
 grep -nE "→ ждёт|ждёт|dep:|блокер|blocked:|остановлен|ждёт согласования" \
-  {{HOME_DIR}}/.claude/projects/*/memory/MEMORY.md 2>/dev/null
+  $HOME/.claude/projects/*/memory/MEMORY.md 2>/dev/null
 ```
 
 Для каждого найденного паттерна:
@@ -120,7 +128,8 @@ grep -nE "→ ждёт|ждёт|dep:|блокер|blocked:|остановлен|
 > Правило: [feedback_memory_index_discipline.md](../../../memory/feedback_memory_index_discipline.md)
 
 ```bash
-python3 ${IWE_TEMPLATE:-{{HOME_DIR}}/IWE/FMT-exocortex-template}/.claude/scripts/check-index-health.py
+T="${IWE_TEMPLATE:-$HOME/IWE/FMT-exocortex-template}"
+PY3="$(bash "$T/.claude/lib/find-python3.sh")" && "$PY3" "$T/.claude/scripts/check-index-health.py"
 ```
 
 Для каждого FAIL/WARN в отчёте:
@@ -137,7 +146,8 @@ python3 ${IWE_TEMPLATE:-{{HOME_DIR}}/IWE/FMT-exocortex-template}/.claude/scripts
 ## Шаг 6: Мультипликатор IWE — алгоритм
 
 1. **WakaTime** — физическое время за день:
-   - CLI: `~/.wakatime/wakatime-cli --today`
+   - **Дата закрытия ≠ календарная дата вызова** (например, `/day-close` вызван после полуночи для вчерашнего дня) → `--today` НЕ пробовать вообще, сразу Neon-fallback с явной датой в SQL (issue #732: `--today` у `wakatime-cli` возвращает данные за день ВЫЗОВА, не за закрываемый день, и при последней проверке 15.07 флага «дать данные за конкретную дату» у CLI не было — тот же класс бага, что уже чинили для Day Open, WP-299 Ф4 п.3).
+   - Дата закрытия = календарная дата вызова → CLI: `~/.wakatime/wakatime-cli --today`
    - Fallback Neon: `SELECT payload->>'human_readable', payload->>'total_seconds' FROM learning.public.domain_event WHERE event_type='coding_time' AND account_id='{DT_USER_ID}' AND external_id='wakatime:{DT_USER_ID}:{YYYY-MM-DD}'`
    - Если Neon тоже пуст → пометить «pending Neon», пересчитать при следующей сессии
 
