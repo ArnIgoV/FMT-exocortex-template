@@ -131,6 +131,11 @@ PLATFORM_HOOKS_EXPLICIT_INCLUDE=(
     "seed/strategy/.githooks/pre-commit"
     "seed/strategy/.githooks/pre-push"
     "seed/strategy/scripts/install-hooks.sh"
+    # WP-485 Ф14: portable isolate-push for template users (а∩г)
+    "seed/strategy/scripts/isolate-push.sh"
+    # issue #941: strategist.sh publishes through $governance/scripts/ds-publish.sh,
+    # which the template never shipped; update.sh delivers it only when absent.
+    "seed/strategy/scripts/ds-publish.sh"
     # #533: existing installations need the subject-scoped Day Open reader.
     "seed/strategy/scripts/day-open-llm-fill.py"
     "seed/strategy/scripts/update-derived-snapshot.py"
@@ -160,6 +165,7 @@ PLATFORM_HOOKS_EXPLICIT_INCLUDE=(
     "seed/strategy/scripts/lib/day-open-hooks.sh"
     "seed/strategy/scripts/lib/find-python3.sh"
     "seed/strategy/scripts/lib/ledger-path.sh"
+    "seed/strategy/scripts/lib/ledger-publish-kick.sh"
     "seed/strategy/scripts/lib/ledger_path.py"
     "seed/strategy/scripts/lib/network-wait.sh"
     "seed/strategy/scripts/lib/notification-render.sh"
@@ -189,10 +195,14 @@ AGENT_FAULT_EXPLICIT_INCLUDE=(
 # real release would have shipped a template without its own test gate and
 # nobody would have noticed until a user hit the bug the gate exists to catch.
 SCRIPT_CONTRACT_EXPLICIT_INCLUDE=(
+    # Changes to this array require a `Delivery-Route: github-explicit-include`
+    # commit trailer (docs/critical-files-map.yaml) — enforced by
+    # scripts/check-delivery-route-label.sh in CI.
     # 2026-08-23 (v0.38.7 матрица, находка 4): check-python-resolver-contract.sh
     # доставляется, а его обязательный baseline сидел в excluded — на установке
     # строго из манифеста сторож падал rc=2. Ratchet-снимок — часть поставки.
     "scripts/tests/fixtures/python-resolver-baseline.txt"
+    "scripts/tests/test_issue_728_agentigore_dirslash.sh"
     "scripts/tests/test_issue_718_sync_canary.sh"
     "scripts/tests/test_issue_720_decision_log_sot.sh"
     "scripts/tests/test_create_wp_registry_coherence.sh"
@@ -210,6 +220,10 @@ SCRIPT_CONTRACT_EXPLICIT_INCLUDE=(
     "scripts/tests/test_critical_alert_failure_matrix.sh"
     "scripts/tests/test_create_wp_repeat_and_cwd.sh"
     "scripts/tests/test_create_wp_hypothesis_relation.sh"
+    # issue #956: run-issue-tests.sh (delivered) names both in ADDITIONAL_ISSUE_TESTS,
+    # and a registered test file that is missing fails the runner on an installed copy.
+    "scripts/tests/test_create_wp_verification_class.sh"
+    "scripts/tests/test_create_wp_artifactor_gate.sh"
     "scripts/tests/test_day_close_lock_timezone.sh"
     "scripts/tests/test_fresh_seed_reproduction.sh"
     "scripts/tests/test_generate_manifest_registers_setup_exclusions.sh"
